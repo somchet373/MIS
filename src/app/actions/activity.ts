@@ -18,7 +18,7 @@ function readActivity(form: FormData): ActivityInput {
   const raw = text(form, "maxParticipants"), maxParticipants = Number(raw);
   assert(title && description && location && title.length <= 150 && description.length <= 5000 && location.length <= 200,
     "กรุณากรอกชื่อ สถานที่ และรายละเอียดให้ครบและไม่เกินจำนวนตัวอักษรที่กำหนด");
-  assert(["academic", "workshop", "recreation"].includes(category), "กรุณาเลือกหมวดหมู่กิจกรรม");
+  assert(category && category.length <= 150, "กรุณาระบุหมวดหมู่กิจกรรม และความยาวต้องไม่เกิน 150 ตัวอักษร");
   assert(/^\d+$/.test(raw) && Number.isSafeInteger(maxParticipants) && maxParticipants >= 1 && maxParticipants <= 2147483647,
     "จำนวนผู้เข้าร่วมต้องเป็นจำนวนเต็มอย่างน้อย 1 คน และไม่เกิน 2,147,483,647 คน");
   return { title, description, location, category, maxParticipants };

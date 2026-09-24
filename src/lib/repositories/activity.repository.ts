@@ -75,6 +75,32 @@ export class PostgresActivityRepository {
     ]);
     return { created: created.map(present), registrations: registrations.map(r => ({ ...r, activity: present(r.activity) })), applications };
   }
+  async getMyCreatedActivitiesWithRegistrations(userId: string) {
+    const activities = await db.activity.findMany({
+      where: { createdBy: userId },
+      include: {
+        registrations: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return activities.map(a => ({
+      id: a.id,
+      title: a.title,
+      category: a.category,
+      startAt: a.startAt.toISOString(),
+      endAt: a.endAt.toISOString(),
+      location: a.location,
+      maxParticipants: a.maxParticipants,
+      status: a.status,
+      registrations: a.registrations.map(r => ({
+        id: r.id,
+        userId: r.userId,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    }));
+  }
   async create(user: CoreUserSession, input: NewActivityInput) {
     if (!canCreateActivity(user)) return fail("เฉพาะนักศึกษาที่เป็นหัวหน้าห้องเท่านั้นที่สร้างกิจกรรมได้");
     return db.activity.create({ data: { ...input, createdBy: user.coreUserId, creatorName: user.displayName } });

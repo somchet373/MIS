@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -23,19 +23,19 @@ enum ApplicationStatus {
 }
 
 model Activity {
-  id              String         @id @default(uuid())
-  title           String         @db.VarChar(150)
-  description     String         @db.VarChar(5000)
-  category        String         @db.VarChar(30)
-  startAt         DateTime       @db.Timestamptz(3)
-  endAt           DateTime       @db.Timestamptz(3)
-  location        String         @db.VarChar(200)
+  id              String            @id @default(uuid())
+  title           String            @db.VarChar(150)
+  description     String            @db.VarChar(5000)
+  category        String            @db.VarChar(150)
+  startAt         DateTime          @db.Timestamptz(3)
+  endAt           DateTime          @db.Timestamptz(3)
+  location        String            @db.VarChar(200)
   maxParticipants Int
-  status          ActivityStatus @default(OPEN)
+  status          ActivityStatus    @default(OPEN)
   // External Core identifiers; no local login or duplicated Core user table.
   createdBy       String
   creatorName     String
-  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
   roles           ActivityRole[]
   registrations   Registration[]
   applications    TeamApplication[]
