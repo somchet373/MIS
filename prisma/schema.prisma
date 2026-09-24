@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ActivityStatus {
+  DRAFT
+  OPEN
+  FULL
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Activity {
+  id              String         @id @default(uuid())
+  title           String         @db.VarChar(150)
+  description     String         @db.VarChar(5000)
+  category        String         @db.VarChar(30)
+  startAt         DateTime       @db.Timestamptz(3)
+  endAt           DateTime       @db.Timestamptz(3)
+  location        String         @db.VarChar(200)
+  maxParticipants Int
+  status          ActivityStatus @default(OPEN)
+  // External Core identifiers; no local login or duplicated Core user table.
+  createdBy       String
+  creatorName     String
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  roles           ActivityRole[]
+  registrations   Registration[]
+  applications    TeamApplication[]
+  evaluations     Evaluation[]
+
+  @@index([createdBy])
+  @@index([status, startAt])
+  @@map("activity_activities")
+}
+
+model ActivityRole {
+  id           String            @id @default(uuid())
+  activityId   String
+  roleName     String            @db.VarChar(100)
+  nameKey      String            @db.VarChar(100)
+  description  String            @default("") @db.VarChar(500)
+  maxMembers   Int
+  activity     Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  applications TeamApplication[]
+
+  @@unique([activityId, nameKey])
+  @@unique([id, activityId])
+  @@map("activity_roles")
+}
+
+model TeamApplication {
+  id         String            @id @default(uuid())
+  activityId String
+  roleId     String
+  userId     String
+  userName   String
+  status     ApplicationStatus @default(PENDING)
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  role       ActivityRole      @relation(fields: [roleId, activityId], references: [id, activityId], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([roleId, activityId, status])
+  @@index([userId])
+  @@map("activity_team_applications")
+}
+
+model Registration {
+  id         String   @id @default(uuid())
+  activityId String
+  userId     String
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([userId])
+  @@map("activity_registrations")
+}
+
+model Evaluation {
+  id          String   @id @default(uuid())
+  activityId  String
+  userId      String
+  rating      Int
+  liked       String   @db.VarChar(2000)
+  improvement String   @db.VarChar(2000)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@map("activity_evaluations")
+}

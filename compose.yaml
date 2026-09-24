@@ -1,0 +1,21 @@
+name: csmju-activity-dev
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: csmju_activity
+      POSTGRES_USER: csmju_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Use --env-file .env.docker}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csmju_dev -d csmju_activity"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  postgres_data:
