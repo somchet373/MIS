@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -23,19 +23,18 @@ enum ApplicationStatus {
 }
 
 model Activity {
-  id              String         @id @default(uuid())
-  title           String         @db.VarChar(150)
-  description     String         @db.VarChar(5000)
-  category        String         @db.VarChar(30)
-  startAt         DateTime       @db.Timestamptz(3)
-  endAt           DateTime       @db.Timestamptz(3)
-  location        String         @db.VarChar(200)
-  maxParticipants Int
-  status          ActivityStatus @default(OPEN)
-  // External Core identifiers; no local login or duplicated Core user table.
-  createdBy       String
-  creatorName     String
-  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  id              String            @id @default(uuid())
+  title           String            @db.VarChar(150)
+  description     String            @db.VarChar(5000)
+  category        String            @db.VarChar(150)
+  startAt         DateTime          @map("start_at") @db.Timestamptz(3)
+  endAt           DateTime          @map("end_at") @db.Timestamptz(3)
+  location        String            @db.VarChar(200)
+  maxParticipants Int               @map("max_participants")
+  status          ActivityStatus    @default(OPEN)
+  createdBy       String            @map("created_by")
+  creatorName     String            @map("creator_name")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   roles           ActivityRole[]
   registrations   Registration[]
   applications    TeamApplication[]
@@ -48,11 +47,11 @@ model Activity {
 
 model ActivityRole {
   id           String            @id @default(uuid())
-  activityId   String
-  roleName     String            @db.VarChar(100)
-  nameKey      String            @db.VarChar(100)
+  activityId   String            @map("activity_id")
+  roleName     String            @map("role_name") @db.VarChar(100)
+  nameKey      String            @map("name_key") @db.VarChar(100)
   description  String            @default("") @db.VarChar(500)
-  maxMembers   Int
+  maxMembers   Int               @map("max_members")
   activity     Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
   applications TeamApplication[]
 
@@ -63,43 +62,43 @@ model ActivityRole {
 
 model TeamApplication {
   id         String            @id @default(uuid())
-  activityId String
-  roleId     String
-  userId     String
-  userName   String
+  activityId String            @map("activity_id")
+  roleId     String            @map("role_id")
+  coreUserId String            @map("core_user_id")
+  userName   String            @map("user_name")
   status     ApplicationStatus @default(PENDING)
-  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
   role       ActivityRole      @relation(fields: [roleId, activityId], references: [id, activityId], onDelete: Cascade)
 
-  @@unique([activityId, userId])
+  @@unique([activityId, coreUserId])
   @@index([roleId, activityId, status])
-  @@index([userId])
+  @@index([coreUserId])
   @@map("activity_team_applications")
 }
 
 model Registration {
   id         String   @id @default(uuid())
-  activityId String
-  userId     String
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  activityId String   @map("activity_id")
+  coreUserId String   @map("core_user_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
-  @@unique([activityId, userId])
-  @@index([userId])
+  @@unique([activityId, coreUserId])
+  @@index([coreUserId])
   @@map("activity_registrations")
 }
 
 model Evaluation {
   id          String   @id @default(uuid())
-  activityId  String
-  userId      String
+  activityId  String   @map("activity_id")
+  coreUserId  String   @map("core_user_id")
   rating      Int
   liked       String   @db.VarChar(2000)
   improvement String   @db.VarChar(2000)
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
-  @@unique([activityId, userId])
+  @@unique([activityId, coreUserId])
   @@map("activity_evaluations")
 }
