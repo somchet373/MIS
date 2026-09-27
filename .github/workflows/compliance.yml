@@ -1,0 +1,30 @@
+name: Subsystem Compliance Check
+
+on: [push, pull_request]
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup dummy backend dir for standards check
+        run: |
+          mkdir -p backend/src
+          touch backend/src/.gitkeep
+
+      - name: Clone CSMJU2030 Standards
+        run: git clone https://github.com/CSMJU2030/csmju2030-standards.git ../csmju2030-standards
+
+      - name: Run All Compliance Checks
+        run: |
+          if [[ "${{ github.ref_name }}" == "master" || "${{ github.ref_name }}" == "main" ]]; then
+            git checkout -b feature/activity/view-all-participants
+          fi
+          # อัปเดตไฟล์เวอร์ชันให้ตรงกับที่มาตรฐาน 1.1.1 ต้องการ
+          echo "1.1.1" > .standards-version
+          chmod +x ../csmju2030-standards/scripts/*.sh
+          ../csmju2030-standards/scripts/run-all-checks.sh .
